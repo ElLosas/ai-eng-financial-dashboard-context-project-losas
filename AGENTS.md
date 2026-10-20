@@ -1,15 +1,9 @@
-# Agent Guidance
+# Agent Guidance for the Financial Dashboard
 
-Agents working on this project **must**:
+Before analyzing code, editing files, or producing responses, agents **must** check the following sources:
 
-- Look for **work instructions and rules** in the directory:  
-  `./.agents/rules`
+- `./.agents/rules`: project-specific work instructions and rules.
+- `./.agents/skills`: available agent skills.
+- `./memory-bank`: project context and recorded state, if the directory exists.
 
-- Look for available **agent skills** in the directory:  
-  `./.agents/skills`
-
-- Look for the **project memory bank** in:  
-  `./memory-bank`  
-  _(if the directory exists)_
-
-Before taking action (analyzing code, modifying files, or generating outputs), always review the latest files in these locations to ensure compliance with project conventions, context, and operational constraints.
+Review the latest files available in these locations before proceeding. Use them to keep your work consistent with the repository's conventions, context, and operational constraints.
