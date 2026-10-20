@@ -10,6 +10,10 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      API_PROXY_TARGET: "${API_PROXY_TARGET:-http://backend:8000}"
 
   backend:
     build:
