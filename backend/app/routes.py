@@ -10,11 +10,17 @@ from pydantic import BaseModel
 
 OperationType = Literal["income", "outcome"]
 Category = Literal["suppliers", "sales",
-                   "operational", "administrative", "others"]
+                   "operational", "administrative", "others", "taxes"]
 BusinessType = Literal["B2B", "B2C"]
 GroupBy = Literal["day", "week", "month"]
 
-OUTCOME_CATEGORIES = ["suppliers", "operational", "administrative", "others"]
+OUTCOME_CATEGORIES = [
+    "suppliers",
+    "operational",
+    "administrative",
+    "others",
+    "taxes",
+]
 
 router = APIRouter()
 

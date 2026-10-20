@@ -1,5 +1,5 @@
 export type OperationType = 'income' | 'outcome'
-export type Category = 'suppliers' | 'sales' | 'operational' | 'administrative' | 'others'
+export type Category = 'suppliers' | 'sales' | 'operational' | 'administrative' | 'others' | 'taxes'
 export type BusinessType = 'B2B' | 'B2C'
 
 export interface FinancialMovement {

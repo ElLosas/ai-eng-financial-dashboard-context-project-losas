@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeKPIs,
   computeMonthlyData,
+  formatFinancialPeriod,
   formatCurrency,
   formatPercent,
 } from "./financial-utils";
@@ -61,6 +62,20 @@ describe("computeKPIs", () => {
 });
 
 describe("computeMonthlyData", () => {
+  it("groups an ISO date on the first day of the month without timezone shifting", () => {
+    const movements: FinancialMovement[] = [
+      {
+        create_date: "2026-01-01",
+        amount: 300,
+        operation_type: "income",
+        category: "sales",
+        business_type: "B2C",
+      },
+    ];
+
+    expect(computeMonthlyData(movements)[0].month).toBe("Jan 2026");
+  });
+
   it("returns chronological year-month points with aggregated totals", () => {
     const unsortedCrossYearMovements: FinancialMovement[] = [
       {
@@ -100,6 +115,16 @@ describe("computeMonthlyData", () => {
       outcome: 0,
       profitPercent: 100,
     });
+  });
+});
+
+describe("formatFinancialPeriod", () => {
+  it("derives the displayed range from movement dates", () => {
+    expect(formatFinancialPeriod(sampleMovements)).toBe("Jan 2024 - Feb 2024");
+  });
+
+  it("handles an empty movement list", () => {
+    expect(formatFinancialPeriod([])).toBe("No data");
   });
 });
 

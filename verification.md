@@ -1,5 +1,21 @@
-# Fase 1: verificación
+# Verificación del resumen
 
-Contrasté el resumen con el código: `App.tsx` solicita `/api/metrics`, `vite.config.ts` reenvía `/api` a `backend:8000` y `routes.py` genera movimientos de ejemplo. `docker-compose.yml` define los servicios frontend y backend.
+1. **Afirmación original:** El dashboard muestra ingresos, gastos, beneficio y margen, además de gráficos mensuales.  
+   **Archivos revisados:** `frontend/src/App.tsx`, `frontend/src/components/dashboard/kpi-row.tsx` y los componentes de gráficos.  
+   **Resultado:** Confirmada.
 
-Ejecuté Compose y pude abrir el frontend. Los logs muestran que Uvicorn arrancó; no confirmé la respuesta de la API desde el navegador.
+2. **Afirmación original:** El frontend solicita `/api/metrics` y calcula los indicadores y datos mensuales.  
+   **Archivos revisados:** `frontend/src/App.tsx`, `frontend/src/lib/financial-utils.ts`.  
+   **Resultado:** Confirmada.
+
+3. **Afirmación original:** Vite reenvía las solicitudes `/api` al backend de Docker Compose.  
+   **Archivos revisados:** `frontend/vite.config.ts`, `docker-compose.yml`.  
+   **Resultado:** Confirmada.
+
+4. **Afirmación original:** El backend genera movimientos de ejemplo para las rutas de métricas revisadas.  
+   **Archivos revisados:** `backend/app/main.py`, `backend/app/routes.py`.  
+   **Resultado:** Confirmada en el código.
+
+5. **Afirmación original:** El proyecto se levanta con `docker compose up --build`.  
+   **Archivos revisados:** `README.es.md`, `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`.  
+   **Resultado:** Parcial: ejecuté Compose, pude abrir el frontend y los logs muestran que Uvicorn arrancó; no confirmé desde el navegador la respuesta de `/api/metrics`.

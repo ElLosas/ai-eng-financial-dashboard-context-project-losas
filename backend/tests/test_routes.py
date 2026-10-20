@@ -3,7 +3,12 @@ from datetime import date
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.routes import filter_movements_by_date, generate_mock_movements
+from app.routes import (
+    FinancialMovement,
+    calculate_net_value,
+    filter_movements_by_date,
+    generate_mock_movements,
+)
 
 
 client = TestClient(app)
@@ -24,6 +29,27 @@ def test_filter_movements_by_date_includes_range_edges():
 
     assert filtered
     assert all(movement.create_date == target_date for movement in filtered)
+
+
+def test_calculate_net_value_uses_known_income_and_outcome_amounts():
+    movements = [
+        FinancialMovement(
+            create_date=date(2026, 1, 10),
+            amount=1200.50,
+            operation_type="income",
+            category="sales",
+            business_type="B2B",
+        ),
+        FinancialMovement(
+            create_date=date(2026, 1, 12),
+            amount=475.25,
+            operation_type="outcome",
+            category="suppliers",
+            business_type="B2B",
+        ),
+    ]
+
+    assert calculate_net_value(movements) == 725.25
 
 
 def test_health_endpoint_returns_ok():
@@ -78,6 +104,15 @@ def test_metrics_endpoint_filters_by_category():
     assert all(item["category"] == "sales" for item in payload)
 
 
+def test_metrics_endpoint_accepts_tax_category():
+    response = client.get("/api/metrics", params={"category": "taxes"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload
+    assert all(item["category"] == "taxes" for item in payload)
+
+
 def test_metrics_endpoint_filters_by_operation_type():
     response = client.get("/api/metrics", params={"operation_type": "income"})
 
@@ -114,6 +149,7 @@ def test_metrics_facets_returns_filter_options_and_date_range():
         "others",
         "sales",
         "suppliers",
+        "taxes",
     ]
     assert payload["min_date"] <= payload["max_date"]
 

@@ -4,33 +4,31 @@ import { KPIRow } from "@/components/dashboard/kpi-row";
 import { IncomeOutcomeChart } from "@/components/dashboard/income-outcome-chart";
 import { ProfitPercentChart } from "@/components/dashboard/profit-percent-chart";
 import {
-  type FinancialMovement,
   type KPIMetrics,
   type MonthlyDataPoint,
 } from "@/lib/financial-types";
-import { computeKPIs, computeMonthlyData } from "@/lib/financial-utils";
+import {
+  computeKPIs,
+  computeMonthlyData,
+  formatFinancialPeriod,
+} from "@/lib/financial-utils";
+import { fetchFinancialData } from "@/lib/financial-api";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
-
-async function fetchFinancialData(): Promise<FinancialMovement[]> {
-  const response = await fetch(`${API_BASE_URL}/api/metrics`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch financial data: ${response.status}`);
-  }
-  return response.json();
-}
 
 function App() {
   const [metrics, setMetrics] = useState<KPIMetrics | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
+  const [period, setPeriod] = useState("No data");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchFinancialData()
+    fetchFinancialData(API_BASE_URL)
       .then((movements) => {
         setMetrics(computeKPIs(movements));
         setMonthlyData(computeMonthlyData(movements));
+        setPeriod(formatFinancialPeriod(movements));
       })
       .catch(() => {
         setError(
@@ -46,7 +44,7 @@ function App() {
     <main className="dark min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-8">
-          <DashboardHeader period="2024 - Full Year" />
+          <DashboardHeader period={period} />
 
           {error ? (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
