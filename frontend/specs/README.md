@@ -35,9 +35,10 @@ estados de componentes se detallan en [`components.md`](./components.md).
 `GET /api/metrics/facets` carga los valores disponibles y el rango de fechas.
 No acepta query parameters ni cuerpo de solicitud.
 
-Las facetas alimentan los filtros usados despues por alertas y categorias. Si
-el usuario selecciona B2B o B2C, se envia `business_type` con ese valor. La
-opcion “Todos” omite ese parametro.
+Las facetas proporcionan las opciones para los controles. El filtro de segmento
+se aplica a las alertas: al seleccionar B2B o B2C se envia `business_type` con
+ese valor y la opcion “Todos” lo omite. La comparativa de categorias es
+independiente de ese selector y siempre solicita una lista B2B y otra B2C.
 
 ### Tipos
 

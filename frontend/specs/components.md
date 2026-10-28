@@ -3,7 +3,7 @@
 ## Alcance
 
 Este documento define contratos de props para las tres funcionalidades de
-analitica de Fase 2. Los tipos de API y parametros se reutilizan desde
+analitica documentadas en `README.md`. Los tipos de API y parametros se reutilizan desde
 `api-types.ts` y `param-types.ts`; los nombres de props de UI se mantienen en
 camelCase y los nombres enviados al backend conservan snake_case.
 
@@ -167,7 +167,7 @@ Renderizado condicional de cada panel B2B y B2C, evaluado por separado:
 ## Criterios de aceptacion
 
 - Ningun componente usa `any` ni `object`; sus datos se tipan con los contratos
-  de Fase 2.
+  de `api-types.ts` y `param-types.ts`.
 - Las facetas definen las opciones y limites disponibles, y el filtro de
   segmento usa exclusivamente los valores `B2B` y `B2C` publicados por la API.
 - El filtro global admite un estado sin segmento y lo traduce a la omision del
