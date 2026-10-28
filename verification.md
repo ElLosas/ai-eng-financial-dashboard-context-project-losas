@@ -65,3 +65,11 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 - Con las dependencias del lockfile instaladas, `npx tsc --noEmit`, `npm run build`, `npm test` (10 pruebas) y `npm run lint`, ejecutados desde `frontend/`, finalizaron correctamente. El build solo mostro el aviso de chunk mayor a 500 kB.
 - El error `Cannot find type definition file for 'vite/client'` se debia a que `frontend/node_modules` estaba vacio y pertenecia a root, lo que impedia `npm ci`. Se retiro unicamente ese directorio vacio y `npm ci --prefix frontend` reinstalo las dependencias; despues pasaron TypeScript y el build.
 - `npm ci` instalo 266 paquetes. `npm audit` informo 14 advisories (1 low, 5 moderate, 8 high); no se ejecuto `npm audit fix` ni se cambiaron versiones para esta fase.
+
+## Documentacion del contrato de datos: 2026-10-28
+
+- Se creo `frontend/specs/README.md` como guia autocontenida del contrato frontend para filtros de periodo/segmento, alertas de gastos y comparativa B2B/B2C.
+- Para cada funcionalidad se indican endpoints contrastados con `/docs`, tipos TypeScript de peticion/respuesta, valores y restricciones de parametros, casos limite y el estado esperado de la UI.
+- Se documentaron limites de fecha abiertos e invertidos, respuestas de alertas vacias, baseline cero, igualdad con el umbral, limites invalidos para `limit`, paneles B2B/B2C sin datos y fallo parcial de la comparativa.
+- La guia enlaza `api-types.ts`, `param-types.ts` y `components.md`, y aclara que los contratos son documentacion: no se agregaron componentes React, llamadas HTTP ni cambios de backend.
+- Tras los cambios de tipos/configuracion, `npx tsc --noEmit` desde `frontend/` termino correctamente. El chequeo valida los archivos TypeScript incluidos por `tsconfig.app.json`; los documentos Markdown no son archivos compilados por TypeScript.
