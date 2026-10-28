@@ -117,9 +117,9 @@ como porcentajes.
 
 La tabla necesita dos solicitudes a `GET /api/metrics/categories/top`: una con
 `business_type=B2B` y otra con `business_type=B2C`. Cada respuesta real es
-`CategoryEntry[]`. `TopCategoriesResponse` es el wrapper compuesto por el
-frontend con las propiedades `B2B` y `B2C`; no es un objeto devuelto por la API.
-Ninguna solicitud requiere cuerpo.
+`TopCategoriesResponse` (`CategoryEntry[]`). `TopCategoriesComparisonData` es
+el wrapper compuesto por el frontend con las propiedades `B2B` y `B2C`; no es
+un objeto devuelto por la API. Ninguna solicitud requiere cuerpo.
 
 ### Parametros TypeScript y valores validos
 

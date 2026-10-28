@@ -40,6 +40,7 @@ export interface AlertEntry {
 /** Array returned by `GET /api/metrics/alerts`; it is empty when no period exceeds the threshold. */
 export type AlertsResponse = AlertEntry[];
 
+/** One item in the array returned by `GET /api/metrics/categories/top`. */
 export interface CategoryEntry {
   /** Category of the ranked movements; values match the API's `Category` union. */
   category: Category;
@@ -49,13 +50,13 @@ export interface CategoryEntry {
   total_amount: number;
 }
 
-/**
- * Frontend aggregation of two `/api/metrics/categories/top` responses.
- * The API returns one `CategoryEntry[]` per request, not this B2B/B2C wrapper.
- */
-export interface TopCategoriesResponse {
+/** Exact response shape of `GET /api/metrics/categories/top`. */
+export type TopCategoriesResponse = CategoryEntry[];
+
+/** Frontend aggregation of two top-category responses for the comparison UI. */
+export interface TopCategoriesComparisonData {
   /** Top categories returned by a request filtered with `business_type=B2B`. */
-  B2B: CategoryEntry[];
+  B2B: TopCategoriesResponse;
   /** Top categories returned by a request filtered with `business_type=B2C`. */
-  B2C: CategoryEntry[];
+  B2C: TopCategoriesResponse;
 }

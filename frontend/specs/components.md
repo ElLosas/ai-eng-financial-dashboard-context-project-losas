@@ -116,28 +116,29 @@ Renderizado condicional:
 ```ts
 import type {
   BusinessType,
-  CategoryEntry,
+  TopCategoriesComparisonData,
   TopCategoriesResponse,
 } from "./api-types";
 import type { TopCategoriesParams } from "./param-types";
 
 interface TopCategoriesComparisonProps {
-  data: TopCategoriesResponse;
+  data: TopCategoriesComparisonData;
   params: Omit<TopCategoriesParams, "business_type">;
   loading?: boolean;
 }
 
 interface TopCategoriesPanelProps {
   businessType: BusinessType;
-  entries: CategoryEntry[];
+  entries: TopCategoriesResponse;
   loading?: boolean;
 }
 ```
 
-- `TopCategoriesResponse` es una composicion del frontend, no una respuesta
-  literal del backend. El padre solicita `/api/metrics/categories/top` dos
-  veces con los mismos filtros y `business_type=B2B` y `business_type=B2C`, y
-  coloca cada array en su propiedad correspondiente.
+- `TopCategoriesResponse` es exactamente el array `CategoryEntry[]` devuelto
+  por una llamada a `/api/metrics/categories/top`. `TopCategoriesComparisonData`
+  es la composicion del frontend: el padre hace dos solicitudes con los mismos
+  filtros, una con `business_type=B2B` y otra con `business_type=B2C`, y coloca
+  cada respuesta en su propiedad correspondiente.
 - La tabla compara siempre ambas columnas, aunque `AnalyticsFilters` tenga
   seleccionado un segmento concreto. El selector de segmento filtra las
   alertas; no elimina una columna de esta comparativa.
@@ -174,8 +175,8 @@ Renderizado condicional de cada panel B2B y B2C, evaluado por separado:
 - La tabla de alertas representa correctamente la escala de ratios y no llama
   “margen” al `increase_ratio`.
 - La tabla de categorias agrega dos respuestas separadas y nunca atribuye al
-  backend el wrapper `TopCategoriesResponse`; los paneles B2B y B2C presentan
-  sus estados vacios de forma independiente.
+  backend el wrapper `TopCategoriesComparisonData`; los paneles B2B y B2C
+  presentan sus estados vacios de forma independiente.
 - Los estados de carga y vacio son distintos; los errores HTTP se manejan en la
   pagina contenedora.
 - Un filtro con solo `start_date` o solo `end_date` conserva el extremo definido
