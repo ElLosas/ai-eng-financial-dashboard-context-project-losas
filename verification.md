@@ -49,3 +49,12 @@ API_PROXY_TARGET=http://host.docker.internal:8000 docker compose up -d --build
 ```
 
 En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard. Esta solución no requiere fijar una IP en el código ni cambiar el destino predeterminado para otros entornos.
+
+## Exploracion de analitica y spec: 2026-10-28
+
+- Se arranco el servicio backend con Docker Compose y Swagger (`/docs`) respondio HTTP 200. Se consulto `/openapi.json` para revisar parametros y modelos de `GET /api/metrics/summary`, `GET /api/metrics/comparison` y `GET /api/metrics/alerts`.
+- `GET /api/metrics/summary?group_by=month` respondio HTTP 200 con 12 periodos; el primero fue `2025-10` y el ultimo `2026-09`. Los elementos contienen `period`, `income`, `outcome` y `net`.
+- `GET /api/metrics/comparison?start_date=2026-03-01&end_date=2026-03-31` respondio HTTP 200 con `current_period=40793.34`, `previous_period=96461.19`, `delta_abs=-55667.85` y `delta_pct=-57.71`.
+- `GET /api/metrics/alerts?threshold=0.2&group_by=month` respondio HTTP 200 con cuatro alertas; sus elementos contienen `period`, `outcome_total`, `baseline_average` e `increase_ratio`.
+- Se contrastaron los contratos con `frontend/src/lib/financial-api.ts`, `frontend/src/lib/financial-types.ts` y `frontend/src/App.tsx`: el frontend solo solicita `/api/metrics` y calcula sus KPI y series mensuales en cliente; no consume estas tres rutas analiticas.
+- Se documento el mapeo de wording, semantica, parametros de consulta y formas de respuesta en `frontend/specs/financial-analytics.md`. No se modifico la implementacion ni se afirma que esos endpoints esten integrados en la interfaz.
