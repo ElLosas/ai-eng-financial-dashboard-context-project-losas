@@ -49,6 +49,16 @@ Si necesitas apuntar a otro backend, copia `frontend/.env.example` como `.env` y
 - Backend: http://localhost:8000
 - Documentación API: http://localhost:8000/docs
 
+## Contenedor de producción
+
+Para ejecutar el frontend compilado para producción junto al backend:
+
+```bash
+docker compose --profile production up --build backend frontend-production
+```
+
+Abre http://localhost:8080. El comando predeterminado `docker compose up --build` sigue usando el servidor de desarrollo de Vite. Para apuntar la API a otro entorno, define `API_PROXY_TARGET` con su origen, por ejemplo `API_PROXY_TARGET=https://api.example.com`.
+
 ---
 
 Este y muchos otros proyectos son construidos por estudiantes como parte de los [Coding Bootcamps](https://4geeksacademy.com/) de 4Geeks Academy. Encuentra más acerca de los [cursos](https://4geeksacademy.com/es/comparar-programas) de [Ingeniería de IA](https://4geeksacademy.com/es/coding-bootcamps/ingenieria-ia), [Data Science & Machine Learning](https://4geeksacademy.com/es/coding-bootcamps/curso-datascience-machine-learning), [Ciberseguridad](https://4geeksacademy.com/es/coding-bootcamps/curso-ciberseguridad) y [Full-Stack Software Developer con IA](https://4geeksacademy.com/es/coding-bootcamps/programador-full-stack).

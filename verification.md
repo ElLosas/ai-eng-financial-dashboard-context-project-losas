@@ -65,6 +65,18 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 - El grid de gráficas usa `items-start` para que abrir una tabla no estire la tarjeta vecina. Ambas descripciones reservan dos líneas (`min-h-10`) para igualar la altura de las tarjetas cuando las tablas están cerradas.
 - Build de producción y ESLint focalizado pasaron tras estos cambios. No se ejecutó una auditoría automatizada de Lighthouse/axe ni una prueba con lector de pantalla o navegador.
 
+## Patrones React y despliegue: 2026-11-01
+
+- Se confirmó que `frontend/package-lock.json` ya está versionado; `frontend/Dockerfile` ahora usa `npm ci` para instalaciones reproducibles y `.dockerignore` excluye dependencias y artefactos locales del contexto Docker.
+- El target `development` mantiene Vite para Codespaces. El target `production` compila `dist` y lo sirve con Nginx; el perfil Compose `production` publica el frontend en el puerto 8080 y reenvía `/api/` al backend.
+- La documentación de `README.md` y `README.es.md` conserva el comando de desarrollo y añade el comando opcional `docker compose --profile production up --build backend frontend-production`.
+- Se cambiaron los imports estáticos de ambas gráficas a `React.lazy` con boundaries `Suspense`. El build generó un entrypoint de `187.95 kB` (`59.95 kB` gzip) y un chunk compartido `LineChart` de `342.29 kB` (`100.53 kB` gzip), sin la advertencia anterior de chunk superior a 500 kB.
+- `docker compose run --build --rm frontend npm run build`, las 10 pruebas frontend, `npm run lint` y `docker compose --profile production config --quiet` pasaron. La imagen `frontend-production` se construyó y se inició; `http://localhost:8080/` y `http://localhost:8080/api/metrics` respondieron HTTP 200.
+- `frontend/index.html` declara título, descripción y color del tema. Se eligió explícitamente la pila de fuentes del sistema en `frontend/src/index.css`; no se descarga una fuente externa.
+- El fallback de `Suspense` y ambos estados de tarjeta reservan 470px mínimos. Es una mitigación estática de CLS; no hay medición de CLS en navegador en esta verificación.
+- `frontend/nginx.conf.template` obtiene el origen API de `API_PROXY_TARGET` al iniciar Nginx. Compose conserva `host.docker.internal:8000` como valor predeterminado para Codespaces y permite sobrescribirlo para otros entornos; el filtro de envsubst preserva las variables propias de Nginx.
+- `next/image` no se aplica a esta SPA Vite: no usa Next.js ni imágenes de contenido que justifiquen un pipeline de imágenes.
+
 ## Exploracion de API: 2026-10-28
 
 - Se arranco el servicio backend con Docker Compose y Swagger (`/docs`) respondio HTTP 200. Se consulto `/openapi.json` y se exploraron rutas de analitica existentes. `/api/metrics/summary` y `/api/metrics/comparison` se conservaron como evidencia de exploracion, pero no forman parte de las tres funcionalidades especificadas en `frontend/specs/README.md`.
