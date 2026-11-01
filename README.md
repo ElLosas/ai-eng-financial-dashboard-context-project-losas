@@ -43,7 +43,7 @@ docker compose up --build
 ```
 
 The frontend uses the Vite proxy for `/api` by default, so no extra environment variables are required in local development or Codespaces.
-If you need to target a different backend origin, copy `frontend/.env.example` to `.env` and set `VITE_API_BASE_URL`.
+For a direct API origin outside the proxy, set `VITE_API_BASE_URL` in `frontend/.env.local`. With Docker Compose, set `API_PROXY_TARGET` to change the proxy destination.
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:8000

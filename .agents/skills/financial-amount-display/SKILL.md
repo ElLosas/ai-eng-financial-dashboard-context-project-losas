@@ -17,6 +17,14 @@ Keep financial calculations numerically accurate and make the display precision,
 
 If the required precision or currency is unspecified and a change would alter visible financial values, report the current behavior and ask for the product decision before changing it. Do not treat an existing formatter or test as proof that its behavior is an approved accounting policy.
 
+## Confirmed Dashboard Policy
+
+- Preserve source cents through API values and frontend calculations.
+- Continue displaying USD rounded to whole dollars in KPI cards, chart tooltips, and data tables using the shared formatter; the income/outcome axis uses compact `$k` labels.
+- Rounding is presentation-only. Do not round generated/API amounts, aggregates, profit, or ratios to match the display.
+- The backend currently generates synthetic data and does not persist it. Preserving cents here does not mean durable database storage.
+- If a future API introduces multiple currencies or a persistent accounting ledger, revisit the currency contract and exact representation (for example integer minor units or decimal types) before changing calculations.
+
 ## Workflow
 
 1. Trace the value from the API/type through aggregation and calculation to every affected display surface.
@@ -31,7 +39,7 @@ If the required precision or currency is unspecified and a change would alter vi
 
 - Backend movements expose `amount` as a Python `float`; frontend movements expose it as a TypeScript `number`.
 - `formatCurrency` currently uses `en-US`, USD, and zero fraction digits. It is shared by KPI cards, chart tooltips, and the chart data table; the income axis separately uses compact `$k` labels.
-- A formatter test currently expects `formatCurrency(1234.56)` to return `$1,235`. This documents current behavior, not a confirmed product-wide precision policy.
+- A formatter test expects `formatCurrency(1234.56)` to return `$1,235`, and the confirmed dashboard policy is to keep that whole-dollar presentation while calculations retain cents.
 
 Recheck these files rather than assuming this evidence is unchanged:
 
