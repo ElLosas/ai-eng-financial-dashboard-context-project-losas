@@ -46,19 +46,34 @@ function App() {
         <div className="flex flex-col gap-8">
           <DashboardHeader period={period} />
 
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            {loading
+              ? "Loading financial dashboard data."
+              : error
+                ? ""
+                : monthlyData.length === 0
+                  ? "No financial data available."
+                  : "Financial dashboard data loaded."}
+          </p>
+
           {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+            <div
+              lang="es"
+              role="alert"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+            >
               {error}
             </div>
           ) : null}
 
-          <section aria-label="Key performance indicators">
+          <section aria-label="Key performance indicators" aria-busy={loading}>
             <KPIRow metrics={metrics} loading={loading} />
           </section>
 
           <section
             aria-label="Financial charts"
-            className="grid grid-cols-1 gap-4 xl:grid-cols-2"
+            aria-busy={loading}
+            className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2"
           >
             <IncomeOutcomeChart data={monthlyData} loading={loading} />
             <ProfitPercentChart data={monthlyData} loading={loading} />

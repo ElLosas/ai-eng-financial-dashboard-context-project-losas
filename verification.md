@@ -10,7 +10,7 @@
 
 3. **Afirmación original:** Vite reenvía las solicitudes `/api` al backend de Docker Compose.  
    **Archivos revisados:** `frontend/vite.config.ts`, `docker-compose.yml`.  
-   **Resultado:** Confirmada con la alternativa `API_PROXY_TARGET=http://host.docker.internal:8000`: el proxy responde HTTP 200. El timeout inicial y la solución validada se detallan abajo.
+   **Resultado:** Confirmada. Desde 2026-11-01 Compose usa `http://host.docker.internal:8000` como destino predeterminado y `/api/metrics` responde HTTP 200 sin pasar un override. El historial de pruebas previas se conserva abajo.
 
 4. **Afirmación original:** El backend genera movimientos de ejemplo para las rutas de métricas revisadas.  
    **Archivos revisados:** `backend/app/main.py`, `backend/app/routes.py`.  
@@ -18,7 +18,7 @@
 
 5. **Afirmación original:** El proyecto se levanta con `docker compose up --build`.  
    **Archivos revisados:** `README.es.md`, `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`.  
-   **Resultado:** Parcial: ejecuté Compose, pude abrir el frontend y los logs muestran que Uvicorn arrancó; no confirmé desde el navegador la respuesta de `/api/metrics`.
+   **Resultado:** El proxy configurado en Compose permite que la interfaz obtenga `/api/metrics` con HTTP 200. No se hizo una comprobación visual automatizada del dashboard en navegador.
 
 ## Comprobaciones posteriores: 2026-10-20
 
@@ -28,7 +28,7 @@
 - El usuario confirmó HTTP 200 al ejecutar desde el contenedor frontend la misma comprobación de salud usando la puerta de enlace Docker y el puerto publicado 8000. La dirección se obtuvo mediante `docker inspect`, sin fijarla en el código.
 - Estos resultados acreditan acceso directo y mediante la puerta de enlace, pero no una integración satisfactoria del dashboard con el proxy actual. La causa exacta del problema de conectividad no está confirmada. No se modificaron Vite ni Compose para aplicar una alternativa.
 
-Evidencia de configuración: `frontend/vite.config.ts` conserva el destino `http://backend:8000`; `docker-compose.yml` publica el puerto 8000 del backend. Los resultados anteriores proceden de las pruebas de terminal de esta sesión, incluidas las salidas compartidas por el usuario; no son inferencias basadas solo en esos archivos.
+Evidencia de configuración: `frontend/vite.config.ts` acepta `API_PROXY_TARGET` y conserva `http://backend:8000` como fallback si no se define; Compose establece ahora `http://host.docker.internal:8000` por defecto. Los resultados históricos proceden de las pruebas de terminal de cada sesión.
 
 ## Alternativa del proxy validada: 2026-10-20
 
@@ -40,15 +40,30 @@ Evidencia de configuración: `frontend/vite.config.ts` conserva el destino `http
 
 ## Cierre de la verificación
 
-El dashboard financiero queda ejecutable en este entorno con el proxy alternativo y el flujo HTTP de métricas funcional: `http://localhost:5173/api/metrics` devuelve HTTP 200 y 360 movimientos. Se volvió a comprobar antes del commit final. Build, lint y las 10 pruebas frontend pasaron, tanto con las dependencias del contenedor como con la instalación local desde el lockfile. La funcionalidad visual completa no se ha comprobado mediante una prueba automatizada de navegador.
+El dashboard financiero queda ejecutable en este entorno con el proxy predeterminado: `http://localhost:5173/api/metrics` devuelve HTTP 200. Build, lint y las 10 pruebas frontend pasaron en las verificaciones registradas. La funcionalidad visual completa no se ha comprobado mediante una prueba automatizada de navegador.
 
-Para arrancar ambos servicios con la alternativa validada, desde la raíz:
+Para arrancar ambos servicios desde la raíz, ya no hace falta definir `API_PROXY_TARGET`:
 
 ```bash
-API_PROXY_TARGET=http://host.docker.internal:8000 docker compose up -d --build
+docker compose up --build
 ```
 
-En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard. Esta solución no requiere fijar una IP en el código ni cambiar el destino predeterminado para otros entornos.
+En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard. El override `API_PROXY_TARGET` sigue disponible para otros entornos.
+
+## Proxy predeterminado de Codespaces: 2026-11-01
+
+- El proxy predeterminado `http://backend:8000` volvió a agotar el tiempo de espera al consultar `http://localhost:5173/api/metrics`; la página frontend y `/health` del backend respondían HTTP 200.
+- Se cambió el valor predeterminado de `API_PROXY_TARGET` en `docker-compose.yml` a `http://host.docker.internal:8000`. La variable sigue permitiendo overrides para otros entornos.
+- Se recreó solo frontend con `docker compose up -d --no-deps --force-recreate frontend`, sin pasar `API_PROXY_TARGET`. Después, la página frontend y `/api/metrics` a través de Vite respondieron HTTP 200.
+- El comando habitual `docker compose up --build` usa ahora ese destino por defecto; no hace falta volver a añadir el override cada vez que se abra Codespaces. La validación fue HTTP y no una prueba visual automatizada del dashboard.
+
+## Accesibilidad y tablas de gráficas: 2026-11-01
+
+- `frontend/src/App.tsx`: el error de API usa `role="alert"` y `lang="es"`; la región `role="status"` anuncia carga, éxito o ausencia de datos y las secciones de KPI/gráficas exponen `aria-busy`.
+- `frontend/src/components/ui/card.tsx`: `CardTitle` renderiza un encabezado `<h2>`. `frontend/src/components/ui/skeleton.tsx` oculta los placeholders a lectores de pantalla y desactiva el pulso con `prefers-reduced-motion`.
+- `frontend/src/components/dashboard/income-outcome-chart.tsx` y `profit-percent-chart.tsx`: cada gráfica ofrece una tabla semántica alternativa; cada tabla tiene un botón propio con `aria-expanded` y estado React local, por lo que su apertura es independiente. En la gráfica de ingresos/gastos, ingresos usa línea sólida y gastos línea discontinua con una explicación textual.
+- El grid de gráficas usa `items-start` para que abrir una tabla no estire la tarjeta vecina. Ambas descripciones reservan dos líneas (`min-h-10`) para igualar la altura de las tarjetas cuando las tablas están cerradas.
+- Build de producción y ESLint focalizado pasaron tras estos cambios. No se ejecutó una auditoría automatizada de Lighthouse/axe ni una prueba con lector de pantalla o navegador.
 
 ## Exploracion de API: 2026-10-28
 
