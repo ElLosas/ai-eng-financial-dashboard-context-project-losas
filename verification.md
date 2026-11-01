@@ -84,6 +84,13 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 - Para trabajos de gráficas, la skill aporta criterios de selección, precisión de ejes/unidades, color, leyendas y accesibilidad. Sus ejemplos de implementación usan Python; en este repo se deben adaptar los principios a React, TypeScript y Recharts, sin incorporar esas librerías Python al frontend.
 - Esta integración añade guía para futuros cambios; no implica por sí sola una auditoría ni cambios adicionales de visualización en esta fecha.
 
+## Skill interna de precisión financiera: 2026-11-01
+
+- Gap identificado: el backend y frontend conservan importes numéricos (`float`/`number`), mientras `formatCurrency` muestra USD sin decimales en KPI, tooltips y tablas. El test confirma que `1234.56` se muestra como `$1,235`, pero no hay una política de producto que establezca si esa precisión corresponde a cada superficie.
+- Se creó `.agents/skills/financial-amount-display/SKILL.md` con objetivo, entradas, flujo, salida esperada y criterios de aceptación. Define cómo trazar valores fuente a superficies, preservar precisión de cálculos, verificar formatos y pedir aclaración cuando un cambio alteraría importes visibles sin requisito explícito.
+- Aplicación de prueba sobre `formatCurrency`: la guía identifica el formato actual común (USD/en-US, cero decimales), la pérdida de centavos también en la tabla de detalle y el eje compacto `$k` independiente. La salida accionable es documentar/confirmar la precisión por superficie antes de cambiarla; no se alteraron fórmulas ni presentación en esta tarea.
+- La skill se referencia desde `memory-bank/product-overview.md`, para que el agente la consulte al trabajar en formatos monetarios. No se añadió a `skills-lock.json`, que registra skills comunitarias, no skills internas.
+
 ## Exploracion de API: 2026-10-28
 
 - Se arranco el servicio backend con Docker Compose y Swagger (`/docs`) respondio HTTP 200. Se consulto `/openapi.json` y se exploraron rutas de analitica existentes. `/api/metrics/summary` y `/api/metrics/comparison` se conservaron como evidencia de exploracion, pero no forman parte de las tres funcionalidades especificadas en `frontend/specs/README.md`.

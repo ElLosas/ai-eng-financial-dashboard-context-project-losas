@@ -7,3 +7,5 @@ Evidencia: `frontend/src/App.tsx`, `frontend/src/components/dashboard/kpi-row.ts
 ## Criterios para gráficas
 
 Al crear o revisar visualizaciones, consulta `.agents/skills/data-visualization/SKILL.md`. Aplica sus criterios de selección de gráfico, escalas, formato de unidades, leyendas, color y accesibilidad al dashboard financiero. El frontend usa TypeScript y Recharts: adapta los principios y no copies literalmente los ejemplos de Python (Matplotlib, Seaborn o Plotly).
+
+Al cambiar o auditar el redondeo o la presentación de importes, consulta `.agents/skills/financial-amount-display/SKILL.md`. Mantén separados el valor de cálculo y su formato, y no conviertas el comportamiento actual del formatter en política contable sin confirmación.
