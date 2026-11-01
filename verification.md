@@ -64,6 +64,9 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 - `frontend/src/components/dashboard/income-outcome-chart.tsx` y `profit-percent-chart.tsx`: cada gráfica ofrece una tabla semántica alternativa; cada tabla tiene un botón propio con `aria-expanded` y estado React local, por lo que su apertura es independiente. En la gráfica de ingresos/gastos, ingresos usa línea sólida y gastos línea discontinua con una explicación textual.
 - El grid de gráficas usa `items-start` para que abrir una tabla no estire la tarjeta vecina. Ambas descripciones reservan dos líneas (`min-h-10`) para igualar la altura de las tarjetas cuando las tablas están cerradas.
 - Build de producción y ESLint focalizado pasaron tras estos cambios. No se ejecutó una auditoría automatizada de Lighthouse/axe ni una prueba con lector de pantalla o navegador.
+- Revisión estática de teclado/ARIA: las tablas se controlan con botones nativos, nombres visibles, `aria-expanded`, `aria-controls` únicos y tablas ocultas mediante `hidden`; los iconos del encabezado/KPI se marcan `aria-hidden`. No hay imágenes de contenido que requieran `alt`.
+- Contraste básico calculado desde los tokens OKLCH del tema oscuro: texto muted/card 5.17:1, texto foreground/card 15.77:1, series income/outcome/profit sobre card 5.08:1/6.03:1/6.34:1 y foco sobre card 4.68:1. Es un cálculo de tokens, no medición de colores renderizados en navegador.
+- Los botones de tabla reservan 24px mínimos de altura (`min-h-6`). La navegación real por teclado sigue pendiente porque no hay navegador/auditor interactivo disponible en esta sesión.
 
 ## Patrones React y despliegue: 2026-11-01
 
@@ -87,7 +90,7 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 
 ## Skill interna de precisión financiera: 2026-11-01
 
-- Gap identificado: faltaba una política explícita para la precisión por superficie, aunque `formatCurrency` ya mostraba USD sin decimales en KPI, tooltips y tablas.
+- Gap identificado y resuelto: `formatCurrency` ya mostraba USD sin decimales en KPI, tooltips y tablas, pero faltaba documentar si los cálculos debían conservar centavos. La política se acordó después de crear la skill y se registra a continuación.
 - Se creó `.agents/skills/financial-amount-display/SKILL.md` con objetivo, entradas, flujo, salida esperada y criterios de aceptación. Define cómo trazar valores fuente a superficies, preservar precisión de cálculos, verificar formatos y pedir aclaración cuando un cambio alteraría importes visibles sin requisito explícito.
 - Política confirmada: conservar centavos en los valores y cálculos; mantener la presentación actual en dólares enteros. El eje continúa usando unidades compactas `$k`. El backend genera datos sintéticos y no los persiste. `financial-utils.test.ts` comprueba importes calculados con centavos junto al formato visible redondeado.
 - La skill se referencia desde `memory-bank/product-overview.md`, para que el agente la consulte al trabajar en formatos monetarios. No se añadió a `skills-lock.json`, que registra skills comunitarias, no skills internas.

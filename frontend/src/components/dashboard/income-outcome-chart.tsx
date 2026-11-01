@@ -130,7 +130,7 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
                 aria-expanded={isDataTableOpen}
                 aria-controls="income-outcome-chart-data"
                 onClick={() => setIsDataTableOpen((open) => !open)}
-                className="cursor-pointer text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="inline-flex min-h-6 items-center cursor-pointer text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 {isDataTableOpen ? 'Hide chart data table' : 'View chart data as a table'}
               </button>
