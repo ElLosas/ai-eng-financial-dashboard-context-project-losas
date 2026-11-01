@@ -77,6 +77,13 @@ En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard.
 - `frontend/nginx.conf.template` obtiene el origen API de `API_PROXY_TARGET` al iniciar Nginx. Compose conserva `host.docker.internal:8000` como valor predeterminado para Codespaces y permite sobrescribirlo para otros entornos; el filtro de envsubst preserva las variables propias de Nginx.
 - `next/image` no se aplica a esta SPA Vite: no usa Next.js ni imágenes de contenido que justifiquen un pipeline de imágenes.
 
+## Skill de visualización de datos: 2026-11-01
+
+- Se añadió `.agents/skills/data-visualization/SKILL.md` desde `anthropics/knowledge-work-plugins`, registrado en `skills-lock.json`.
+- Se eligió porque el dashboard comunica principalmente tendencias mensuales de ingresos/gastos y margen mediante gráficos. Sus criterios de selección, ejes, unidades, color y accesibilidad se aplican directamente a esos componentes y complementan las skills de React y accesibilidad.
+- Para trabajos de gráficas, la skill aporta criterios de selección, precisión de ejes/unidades, color, leyendas y accesibilidad. Sus ejemplos de implementación usan Python; en este repo se deben adaptar los principios a React, TypeScript y Recharts, sin incorporar esas librerías Python al frontend.
+- Esta integración añade guía para futuros cambios; no implica por sí sola una auditoría ni cambios adicionales de visualización en esta fecha.
+
 ## Exploracion de API: 2026-10-28
 
 - Se arranco el servicio backend con Docker Compose y Swagger (`/docs`) respondio HTTP 200. Se consulto `/openapi.json` y se exploraron rutas de analitica existentes. `/api/metrics/summary` y `/api/metrics/comparison` se conservaron como evidencia de exploracion, pero no forman parte de las tres funcionalidades especificadas en `frontend/specs/README.md`.
