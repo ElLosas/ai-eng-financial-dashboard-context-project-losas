@@ -10,7 +10,7 @@
 
 3. **Afirmación original:** Vite reenvía las solicitudes `/api` al backend de Docker Compose.  
    **Archivos revisados:** `frontend/vite.config.ts`, `docker-compose.yml`.  
-   **Resultado:** Confirmada con la alternativa `API_PROXY_TARGET=http://host.docker.internal:8000`: el proxy responde HTTP 200. El timeout inicial y la solución validada se detallan abajo.
+   **Resultado:** Confirmada. Desde 2026-11-01 Compose usa `http://host.docker.internal:8000` como destino predeterminado y `/api/metrics` responde HTTP 200 sin pasar un override. El historial de pruebas previas se conserva abajo.
 
 4. **Afirmación original:** El backend genera movimientos de ejemplo para las rutas de métricas revisadas.  
    **Archivos revisados:** `backend/app/main.py`, `backend/app/routes.py`.  
@@ -18,37 +18,82 @@
 
 5. **Afirmación original:** El proyecto se levanta con `docker compose up --build`.  
    **Archivos revisados:** `README.es.md`, `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`.  
-   **Resultado:** Parcial: ejecuté Compose, pude abrir el frontend y los logs muestran que Uvicorn arrancó; no confirmé desde el navegador la respuesta de `/api/metrics`.
+   **Resultado:** El proxy configurado en Compose permite que la interfaz obtenga `/api/metrics` con HTTP 200. No se hizo una comprobación visual automatizada del dashboard en navegador.
 
-## Comprobaciones posteriores: 2026-10-20
+## Comprobaciones iniciales del proxy: 2026-10-20
 
 - El backend directo respondió HTTP 200 en `/health` con `{"status":"ok"}` y en `/api/metrics` durante las comprobaciones de terminal. El usuario también confirmó acceso a la documentación `/docs` desde el navegador mediante el puerto reenviado de Codespaces.
 - `curl -i --max-time 10 http://localhost:5173/api/metrics` terminó con código 28 (timeout). Recrear los servicios y la red mediante `docker compose down` y `docker compose up -d` no resolvió ese resultado.
 - Desde el contenedor frontend, una petición a `http://backend:8000/health` con `AbortSignal.timeout(5000)` también expiró. El fallo se reproduce sin intervenir el proxy Vite.
 - El usuario confirmó HTTP 200 al ejecutar desde el contenedor frontend la misma comprobación de salud usando la puerta de enlace Docker y el puerto publicado 8000. La dirección se obtuvo mediante `docker inspect`, sin fijarla en el código.
-- Estos resultados acreditan acceso directo y mediante la puerta de enlace, pero no una integración satisfactoria del dashboard con el proxy actual. La causa exacta del problema de conectividad no está confirmada. No se modificaron Vite ni Compose para aplicar una alternativa.
+- En esa fecha, estos resultados no acreditaban una integración satisfactoria con el proxy disponible entonces. La causa exacta del problema de conectividad no quedó confirmada; el proxy predeterminado se corrigió el 2026-11-01 (véase la sección posterior).
 
-Evidencia de configuración: `frontend/vite.config.ts` conserva el destino `http://backend:8000`; `docker-compose.yml` publica el puerto 8000 del backend. Los resultados anteriores proceden de las pruebas de terminal de esta sesión, incluidas las salidas compartidas por el usuario; no son inferencias basadas solo en esos archivos.
+Evidencia de configuración: `frontend/vite.config.ts` acepta `API_PROXY_TARGET` y conserva `http://backend:8000` como fallback si no se define; Compose establece ahora `http://host.docker.internal:8000` por defecto. Los resultados históricos proceden de las pruebas de terminal de cada sesión.
 
-## Alternativa del proxy validada: 2026-10-20
+## Alternativa histórica del proxy: 2026-10-20 (supersedida el 2026-11-01)
 
 - Se corrigió la ubicación de `extra_hosts` y `API_PROXY_TARGET`: pertenecen al servicio frontend, donde corre Vite, no al backend. Se retiró el volumen `/app/node_modules` añadido al backend durante el intento de configuración.
 - Vite permite seleccionar `process.env.API_PROXY_TARGET`, conservando `http://backend:8000` como destino predeterminado. El alias `host.docker.internal` se resuelve mediante `host-gateway`.
 - Se validó Compose con `docker compose config --quiet` y se recreó únicamente frontend con `API_PROXY_TARGET=http://host.docker.internal:8000 docker compose up -d --no-deps --force-recreate frontend`.
 - Desde frontend, la petición a `http://host.docker.internal:8000/health` respondió 200. Desde la terminal, tanto `http://localhost:8000/api/metrics` como `http://localhost:5173/api/metrics` respondieron HTTP 200 con 360 movimientos; se verificaron los cinco campos de movimiento de la primera entrada.
-- Esta alternativa resuelve el acceso HTTP a través del proxy en la sesión validada. No demuestra que se haya reparado la conexión directa a `backend:8000`, ni confirma su causa, ni sustituye una prueba del dashboard en el navegador. Al recrear el servicio hay que volver a proporcionar la variable para mantener la alternativa.
+- En esa sesión, la alternativa resolvió el acceso HTTP a través del proxy; no demostró que se reparase la conexión directa a `backend:8000` ni confirmó su causa. La necesidad de volver a proporcionar la variable quedó supersedida el 2026-11-01 al convertirla en el destino predeterminado de Compose.
 
 ## Cierre de la verificación
 
-El dashboard financiero queda ejecutable en este entorno con el proxy alternativo y el flujo HTTP de métricas funcional: `http://localhost:5173/api/metrics` devuelve HTTP 200 y 360 movimientos. Se volvió a comprobar antes del commit final. Build, lint y las 10 pruebas frontend pasaron, tanto con las dependencias del contenedor como con la instalación local desde el lockfile. La funcionalidad visual completa no se ha comprobado mediante una prueba automatizada de navegador.
+El dashboard financiero queda ejecutable en este entorno con el proxy predeterminado: `http://localhost:5173/api/metrics` devuelve HTTP 200. Build, lint y 11 pruebas frontend pasan en la verificación actual. La funcionalidad visual completa no se ha comprobado mediante una prueba automatizada de navegador.
 
-Para arrancar ambos servicios con la alternativa validada, desde la raíz:
+Para arrancar ambos servicios desde la raíz, ya no hace falta definir `API_PROXY_TARGET`:
 
 ```bash
-API_PROXY_TARGET=http://host.docker.internal:8000 docker compose up -d --build
+docker compose up --build
 ```
 
-En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard. Esta solución no requiere fijar una IP en el código ni cambiar el destino predeterminado para otros entornos.
+En Codespaces, abrir la URL reenviada del puerto 5173 para acceder al dashboard. El override `API_PROXY_TARGET` sigue disponible para otros entornos.
+
+## Proxy predeterminado de Codespaces: 2026-11-01
+
+- El proxy predeterminado `http://backend:8000` volvió a agotar el tiempo de espera al consultar `http://localhost:5173/api/metrics`; la página frontend y `/health` del backend respondían HTTP 200.
+- Se cambió el valor predeterminado de `API_PROXY_TARGET` en `docker-compose.yml` a `http://host.docker.internal:8000`. La variable sigue permitiendo overrides para otros entornos.
+- Se recreó solo frontend con `docker compose up -d --no-deps --force-recreate frontend`, sin pasar `API_PROXY_TARGET`. Después, la página frontend y `/api/metrics` a través de Vite respondieron HTTP 200.
+- El comando habitual `docker compose up --build` usa ahora ese destino por defecto; no hace falta volver a añadir el override cada vez que se abra Codespaces. La validación fue HTTP y no una prueba visual automatizada del dashboard.
+
+## Accesibilidad y tablas de gráficas: 2026-11-01
+
+- `frontend/src/App.tsx`: el error de API usa `role="alert"` y `lang="es"`; la región `role="status"` anuncia carga, éxito o ausencia de datos y las secciones de KPI/gráficas exponen `aria-busy`.
+- `frontend/src/components/ui/card.tsx`: `CardTitle` renderiza un encabezado `<h2>`. `frontend/src/components/ui/skeleton.tsx` oculta los placeholders a lectores de pantalla y desactiva el pulso con `prefers-reduced-motion`.
+- `frontend/src/components/dashboard/income-outcome-chart.tsx` y `profit-percent-chart.tsx`: cada gráfica ofrece una tabla semántica alternativa; cada tabla tiene un botón propio con `aria-expanded` y estado React local, por lo que su apertura es independiente. En la gráfica de ingresos/gastos, ingresos usa línea sólida y gastos línea discontinua con una explicación textual.
+- El grid de gráficas usa `items-start` para que abrir una tabla no estire la tarjeta vecina. Ambas descripciones reservan dos líneas (`min-h-10`) para igualar la altura de las tarjetas cuando las tablas están cerradas.
+- Build de producción y ESLint focalizado pasaron tras estos cambios. No se ejecutó una auditoría automatizada de Lighthouse/axe ni una prueba con lector de pantalla o navegador.
+- Revisión estática de teclado/ARIA: las tablas se controlan con botones nativos, nombres visibles, `aria-expanded`, `aria-controls` únicos y tablas ocultas mediante `hidden`; los iconos del encabezado/KPI se marcan `aria-hidden`. No hay imágenes de contenido que requieran `alt`.
+- Contraste básico calculado desde los tokens OKLCH del tema oscuro: texto muted/card 5.17:1, texto foreground/card 15.77:1, series income/outcome/profit sobre card 5.08:1/6.03:1/6.34:1 y foco sobre card 4.68:1. Es un cálculo de tokens, no medición de colores renderizados en navegador.
+- Los botones de tabla reservan 24px mínimos de altura (`min-h-6`). La navegación real por teclado sigue pendiente porque no hay navegador/auditor interactivo disponible en esta sesión.
+
+## Patrones React y despliegue: 2026-11-01
+
+- Se confirmó que `frontend/package-lock.json` ya está versionado; `frontend/Dockerfile` ahora usa `npm ci` para instalaciones reproducibles y `.dockerignore` excluye dependencias y artefactos locales del contexto Docker.
+- El target `development` mantiene Vite para Codespaces. El target `production` compila `dist` y lo sirve con Nginx; el perfil Compose `production` publica el frontend en el puerto 8080 y reenvía `/api/` al backend.
+- La documentación de `README.md` y `README.es.md` conserva el comando de desarrollo y añade el comando opcional `docker compose --profile production up --build backend frontend-production`.
+- Se cambiaron los imports estáticos de ambas gráficas a `React.lazy` con boundaries `Suspense`. El build generó un entrypoint de `187.95 kB` (`59.95 kB` gzip) y un chunk compartido `LineChart` de `342.29 kB` (`100.53 kB` gzip), sin la advertencia anterior de chunk superior a 500 kB.
+- `docker compose run --build --rm frontend npm run build` pasó sin advertencias; 11 pruebas frontend, `npm run lint` y `docker compose --profile production config --quiet` pasaron. La imagen `frontend-production` se construyó y se inició; `http://localhost:8080/` y `http://localhost:8080/api/metrics` respondieron HTTP 200.
+- `frontend/index.html` declara título, descripción y color del tema. Se eligió explícitamente la pila de fuentes del sistema en `frontend/src/index.css`; no se descarga una fuente externa.
+- El fallback de `Suspense` y ambos estados de tarjeta reservan 470px mínimos. Es una mitigación estática de CLS; no hay medición de CLS en navegador en esta verificación.
+- `frontend/nginx.conf.template` obtiene el origen API de `API_PROXY_TARGET` al iniciar Nginx. Compose conserva `host.docker.internal:8000` como valor predeterminado para Codespaces y permite sobrescribirlo para otros entornos; el filtro de envsubst preserva las variables propias de Nginx.
+- `next/image` no se aplica a esta SPA Vite: no usa Next.js ni imágenes de contenido que justifiquen un pipeline de imágenes.
+- `docker compose config --quiet` y `docker compose --profile production config --quiet` pasan. Las 17 pruebas backend pasan con una advertencia de deprecación de Starlette/httpx en `TestClient`.
+
+## Skill de visualización de datos: 2026-11-01
+
+- Se añadió `.agents/skills/data-visualization/SKILL.md` desde `anthropics/knowledge-work-plugins`, registrado en `skills-lock.json`.
+- Se eligió porque el dashboard comunica principalmente tendencias mensuales de ingresos/gastos y margen mediante gráficos. Sus criterios de selección, ejes, unidades, color y accesibilidad se aplican directamente a esos componentes y complementan las skills de React y accesibilidad.
+- Para trabajos de gráficas, la skill aporta criterios de selección, precisión de ejes/unidades, color, leyendas y accesibilidad. Sus ejemplos de implementación usan Python; en este repo se deben adaptar los principios a React, TypeScript y Recharts, sin incorporar esas librerías Python al frontend.
+- Esta integración añade guía para futuros cambios; no implica por sí sola una auditoría ni cambios adicionales de visualización en esta fecha.
+
+## Skill interna de precisión financiera: 2026-11-01
+
+- Gap identificado y resuelto: `formatCurrency` ya mostraba USD sin decimales en KPI, tooltips y tablas, pero faltaba documentar si los cálculos debían conservar centavos. La política se acordó después de crear la skill y se registra a continuación.
+- Se creó `.agents/skills/financial-amount-display/SKILL.md` con objetivo, entradas, flujo, salida esperada y criterios de aceptación. Define cómo trazar valores fuente a superficies, preservar precisión de cálculos, verificar formatos y pedir aclaración cuando un cambio alteraría importes visibles sin requisito explícito.
+- Política confirmada: conservar centavos en los valores y cálculos; mantener la presentación actual en dólares enteros. El eje continúa usando unidades compactas `$k`. El backend genera datos sintéticos y no los persiste. `financial-utils.test.ts` comprueba importes calculados con centavos junto al formato visible redondeado.
+- La skill se referencia desde `memory-bank/product-overview.md`, para que el agente la consulte al trabajar en formatos monetarios. No se añadió a `skills-lock.json`, que registra skills comunitarias, no skills internas.
 
 ## Exploracion de API: 2026-10-28
 

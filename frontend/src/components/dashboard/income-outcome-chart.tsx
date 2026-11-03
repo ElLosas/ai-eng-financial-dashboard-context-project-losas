@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { type MonthlyDataPoint } from '@/lib/financial-types'
@@ -47,9 +48,11 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
+  const [isDataTableOpen, setIsDataTableOpen] = useState(false)
+
   if (loading) {
     return (
-      <Card className="border-border/60">
+      <Card className="min-h-[470px] border-border/60">
         <CardHeader className="pb-4">
           <Skeleton className="h-5 w-52" />
           <Skeleton className="h-3 w-64 mt-1" />
@@ -64,10 +67,12 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
   const hasData = data.some((d) => d.income > 0 || d.outcome > 0)
 
   return (
-    <Card className="border-border/60">
+    <Card className="min-h-[470px] border-border/60">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold">Income vs. Outcome</CardTitle>
-        <CardDescription>Monthly revenue and expenditure evolution</CardDescription>
+        <CardDescription className="min-h-10">
+          Monthly revenue and expenditure evolution. Income uses a solid line; outcome uses a dashed line.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {!hasData ? (
@@ -75,48 +80,85 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
             No data available to display
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                width={48}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                formatter={(value) => (
-                  <span className="text-xs text-muted-foreground capitalize">{value}</span>
-                )}
-              />
-              <Line
-                type="monotone"
-                dataKey="income"
-                name="income"
-                stroke="var(--chart-income)"
-                strokeWidth={2}
-                dot={{ r: 3, fill: 'var(--chart-income)', strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 0 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="outcome"
-                name="outcome"
-                stroke="var(--chart-outcome)"
-                strokeWidth={2}
-                dot={{ r: 3, fill: 'var(--chart-outcome)', strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                  width={48}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  formatter={(value) => (
+                    <span className="text-xs text-muted-foreground capitalize">{value}</span>
+                  )}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="income"
+                  stroke="var(--chart-income)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: 'var(--chart-income)', strokeWidth: 0 }}
+                  activeDot={{ r: 5, strokeWidth: 0 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="outcome"
+                  name="outcome"
+                  stroke="var(--chart-outcome)"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
+                  dot={{ r: 3, fill: 'var(--chart-outcome)', strokeWidth: 0 }}
+                  activeDot={{ r: 5, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="mt-4">
+              <button
+                type="button"
+                aria-expanded={isDataTableOpen}
+                aria-controls="income-outcome-chart-data"
+                onClick={() => setIsDataTableOpen((open) => !open)}
+                className="inline-flex min-h-6 items-center cursor-pointer text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                {isDataTableOpen ? 'Hide chart data table' : 'View chart data as a table'}
+              </button>
+              <div id="income-outcome-chart-data" hidden={!isDataTableOpen} className="overflow-x-auto pt-3">
+                <table className="w-full border-collapse text-left text-sm">
+                  <caption className="sr-only">
+                    Monthly income and outcome values shown in the chart.
+                  </caption>
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th scope="col" className="py-2 pr-4">Month</th>
+                      <th scope="col" className="py-2 pr-4">Income</th>
+                      <th scope="col" className="py-2">Outcome</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((point) => (
+                      <tr key={point.month} className="border-b border-border/60">
+                        <th scope="row" className="py-2 pr-4 font-medium">{point.month}</th>
+                        <td className="py-2 pr-4">{formatCurrency(point.income)}</td>
+                        <td className="py-2">{formatCurrency(point.outcome)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

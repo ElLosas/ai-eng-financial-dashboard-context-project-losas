@@ -59,6 +59,41 @@ describe("computeKPIs", () => {
     const metrics = computeKPIs(onlyOutcomes);
     expect(metrics.profitPercent).toBe(0);
   });
+
+  it("preserves cents in calculations while currency display rounds to whole dollars", () => {
+    const movementsWithCents: FinancialMovement[] = [
+      {
+        create_date: "2024-01-10",
+        amount: 100.25,
+        operation_type: "income",
+        category: "sales",
+        business_type: "B2B",
+      },
+      {
+        create_date: "2024-01-11",
+        amount: 10.25,
+        operation_type: "income",
+        category: "sales",
+        business_type: "B2B",
+      },
+      {
+        create_date: "2024-01-12",
+        amount: 20.25,
+        operation_type: "outcome",
+        category: "suppliers",
+        business_type: "B2B",
+      },
+    ];
+
+    const metrics = computeKPIs(movementsWithCents);
+
+    expect(metrics.totalIncome).toBe(110.5);
+    expect(metrics.totalOutcome).toBe(20.25);
+    expect(metrics.profit).toBe(90.25);
+    expect(formatCurrency(metrics.totalIncome)).toBe("$111");
+    expect(formatCurrency(metrics.profit)).toBe("$90");
+  });
+
 });
 
 describe("computeMonthlyData", () => {
